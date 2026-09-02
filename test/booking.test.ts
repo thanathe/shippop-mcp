@@ -188,6 +188,17 @@ describe("shippop_confirm_purchase (ADR 0003)", () => {
   });
 });
 
+describe("shippop_confirm_purchase input", () => {
+  it("rejects non-SP codes in tracking_codes before calling SHIPPOP", async () => {
+    const t = await connect({});
+    const res = await t.client.callTool({ name: "shippop_confirm_purchase", arguments: { purchase_id: 1, tracking_codes: ["EA1TH"] } }).catch((e) => e);
+    const text = res instanceof Error ? res.message : JSON.stringify(res);
+    expect(text).toMatch(/starting with SP/);
+    expect(t.calls).toHaveLength(0);
+    await t.close();
+  });
+});
+
 describe("shippop_get_purchase", () => {
   it("returns purchase status and shipments", async () => {
     const t = await connect({ "/tracking_purchase/": PURCHASE("paid") });

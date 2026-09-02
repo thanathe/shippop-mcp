@@ -34,6 +34,7 @@ interface TokenResponse {
  */
 export class InterClient {
   private token: string | undefined;
+  private loginInFlight: Promise<string> | undefined;
 
   constructor(
     private readonly config: InterConfig,
@@ -44,7 +45,17 @@ export class InterClient {
     return this.config.baseUrl;
   }
 
-  private async fetchToken(): Promise<string> {
+  /** Log in, but let concurrent callers share a single in-flight login instead of each hitting getJWTToken. */
+  private fetchToken(): Promise<string> {
+    if (!this.loginInFlight) {
+      this.loginInFlight = this.doLogin().finally(() => {
+        this.loginInFlight = undefined;
+      });
+    }
+    return this.loginInFlight;
+  }
+
+  private async doLogin(): Promise<string> {
     const res = await this.raw("POST", "/authen/getJWTToken", { username: this.config.username, password: this.config.password }, undefined);
     const body = res.body as TokenResponse;
     const token = body?.payload?.jwtToken;

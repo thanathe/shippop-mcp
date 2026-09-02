@@ -205,7 +205,7 @@ export function registerBookingTools(server: McpServer, client: ShippopClient) {
       inputSchema: {
         purchase_id: z.number().int().positive().describe("purchase_id returned by shippop_create_booking"),
         tracking_codes: z
-          .array(z.string())
+          .array(z.string().regex(/^SP\w+$/i, "must be a SHIPPOP tracking code starting with SP"))
           .optional()
           .describe("SHIPPOP tracking codes (SPxxxx) from the booking, so they are echoed back even if SHIPPOP does not respond"),
       },

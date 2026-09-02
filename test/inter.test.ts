@@ -37,6 +37,27 @@ describe("crossborder tools", () => {
     await t.close();
   });
 
+  it("shares one login between concurrent first calls", async () => {
+    const t = await connect(
+      {
+        "/authen/getJWTToken": async () => {
+          await new Promise((r) => setTimeout(r, 20));
+          return TOKEN;
+        },
+        "/api/public/courier/price": { couriers: [] },
+      },
+      { inter },
+    );
+    await Promise.all([
+      t.call("shippop_inter_check_price", { weight: 100, country_code: "JP" }),
+      t.call("shippop_inter_check_price", { weight: 200, country_code: "JP" }),
+      t.call("shippop_inter_check_price", { weight: 300, country_code: "JP" }),
+    ]);
+    expect(t.calls.filter((c) => c.endpoint === "/authen/getJWTToken")).toHaveLength(1);
+    expect(t.calls.filter((c) => c.endpoint === "/api/public/courier/price")).toHaveLength(3);
+    await t.close();
+  });
+
   it("re-authenticates once on 401", async () => {
     let tokenNo = 0;
     const t = await connect(

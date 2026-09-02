@@ -16,6 +16,8 @@ interface LabelResponse {
   json?: unknown;
 }
 
+const TRACKING_CODE_LABEL_SIZES = new Set(["A4", "A5", "A6", "letter", "letter4x6", "sticker", "sticker4x6"]);
+
 function safeName(s: string) {
   return s.replace(/[^A-Za-z0-9_-]+/g, "_").slice(0, 80);
 }
@@ -48,12 +50,20 @@ export function registerLabelTools(server: McpServer, client: ShippopClient, con
         order_date: z.string().optional().describe("Order date printed on label, e.g. 2026-09-02"),
         print_date: z.string().optional().describe("Print date printed on label, e.g. 2026-09-02"),
       },
-      // Not read-only: writes the label file to disk (but never changes anything at SHIPPOP).
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+      // Not read-only: writes a new timestamped label file to disk on every call (never changes anything at SHIPPOP).
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
     guard(client.env, async (args) => {
       if (!args.purchase_id && !args.tracking_codes) {
         throw new Error("Provide purchase_id or tracking_codes");
+      }
+      // Per the docs, /label_tracking_code/ (no purchase_id) supports a smaller size list than /label/.
+      if (!args.purchase_id && !TRACKING_CODE_LABEL_SIZES.has(args.size)) {
+        throw new Error(`size "${args.size}" is only available when printing by purchase_id; with tracking_codes use one of ${[...TRACKING_CODE_LABEL_SIZES].join(", ")}`);
+      }
+      // options[] is keyed by SP tracking code, so per-shipment dates need the codes.
+      if ((args.order_date || args.print_date) && !args.replace_origin && !args.tracking_codes?.length) {
+        throw new Error("order_date / print_date are applied per SP tracking code — pass tracking_codes (optionally together with purchase_id)");
       }
       const body: Record<string, unknown> = {
         type: args.format,

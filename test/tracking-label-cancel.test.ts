@@ -63,6 +63,18 @@ describe("shippop_get_label", () => {
     await t.close();
   });
 
+  it("rejects purchase-only sizes when printing by tracking code, and dates without codes", async () => {
+    const t = await connect({});
+    const a = await t.call("shippop_get_label", { tracking_codes: ["SP1"], size: "paperang" });
+    expect(a.isError).toBe(true);
+    expect(a.json.message).toMatch(/only available when printing by purchase_id/);
+    const b = await t.call("shippop_get_label", { purchase_id: 1, order_date: "2026-09-02" });
+    expect(b.isError).toBe(true);
+    expect(b.json.message).toMatch(/pass tracking_codes/);
+    expect(t.calls).toHaveLength(0);
+    await t.close();
+  });
+
   it("errors when neither purchase_id nor tracking_codes given", async () => {
     const t = await connect({});
     const { isError, json } = await t.call("shippop_get_label", {});
