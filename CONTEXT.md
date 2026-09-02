@@ -33,6 +33,14 @@ _Avoid_: pricelist, estimate, rate
 The printable cover sheet (ใบปะหน้า) for one or more **Shipments**, rendered by SHIPPOP as HTML, PDF (base64) or structured JSON, in a given paper/sticker size.
 _Avoid_: waybill, airway bill, sticker (that is a size, not the thing)
 
+**Label Sender Override**:
+Replacing the sender block printed on a **Label** with a different **Address** than the one the **Shipment** was booked with. Used by **Parcel Shops**: the Shipment is booked from the shop's address (so the **Courier** collects there and the shop stays the account of record), but the receiver must see the shop's customer as the sender. Only the printed label changes — booking, pickup and tracking still use the shop address.
+_Avoid_: replaceOrigin (SHIPPOP's field name), fake sender, drop-ship address
+
+**Parcel Shop**:
+A B2B SHIPPOP customer that ships parcels on behalf of walk-in customers from its own premises. It books every Shipment under its own address and account, and uses a **Label Sender Override** per Shipment to show the real sender.
+_Avoid_: agent, reseller, franchise
+
 **Tracking**:
 The current `order_status` of a **Shipment** plus its ordered list of **Tracking Events**.
 
@@ -111,5 +119,7 @@ _Avoid_: insurance (domestic uses `insurance_code`), protection
 **Expert:** Per Purchase. One Confirm pays for everything in that Purchase and pushes every Shipment to its Courier. Each Shipment then gets a Courier Tracking Code — or an error message if that particular one failed.
 **Dev:** If the user changes their mind after Confirm?
 **Expert:** That's Cancel, keyed by the Courier Tracking Code, and it's up to the Courier whether it works. Before Confirm you just don't confirm — the unpaid Purchase expires on its own.
+**Dev:** A parcel shop books from its own address, but the receiver shouldn't see the shop as sender?
+**Expert:** Right — the booking stays on the shop address because the Courier collects there. When printing the Label you pass a Label Sender Override with the customer's name and address, keyed by SHIPPOP Tracking Code. Nothing else changes.
 **Dev:** Which code do I print on the Label?
 **Expert:** You ask for the Label by Purchase or by SHIPPOP Tracking Code; SHIPPOP renders both codes on it. Tracking also uses the SHIPPOP code. Only Cancel and Pickup Request use the Courier Tracking Code.

@@ -126,6 +126,55 @@ describe("shippop_confirm_purchase (ADR 0003)", () => {
     await t.close();
   });
 
+  it("HTTP 504 on confirm → treated as indeterminate, reconciled, confirm called once (ADR 0003)", async () => {
+    const t = await connect({ "/confirm/": { __http: 504, message: "Gateway Timeout" }, "/tracking_purchase/": PURCHASE("paid") });
+    const { json, isError } = await t.call("shippop_confirm_purchase", { purchase_id: 452002, tracking_codes: ["SP452045855"] });
+    expect(isError).toBe(false);
+    expect(json.confirm_call).toBe("http_error");
+    expect(json.confirmation).toBe("confirmed");
+    expect(json.shipments[0].courier_tracking_code).toBe("EA1TH");
+    expect(t.calls.map((c) => c.endpoint)).toEqual(["/confirm/", "/tracking_purchase/"]);
+    await t.close();
+  });
+
+  it("HTML error page on confirm → indeterminate; reconcile fails → unknown, never retried", async () => {
+    const t = await connect({ "/confirm/": "<html><body>502 Bad Gateway</body></html>", "/tracking_purchase/": new Error("ECONNRESET") });
+    const { json, isError } = await t.call("shippop_confirm_purchase", { purchase_id: 452002, tracking_codes: ["SP452045855"] });
+    expect(isError).toBe(true);
+    expect(json.confirm_call).toBe("http_error");
+    expect(json.confirmation).toBe("unknown");
+    expect(json.guidance).toMatch(/Do NOT retry confirm blindly/);
+    expect(t.calls.filter((c) => c.endpoint === "/confirm/")).toHaveLength(1);
+    await t.close();
+  });
+
+  it("a shipment the courier rejected is reported as rejected, not pending", async () => {
+    const t = await connect({
+      "/confirm/": {
+        status: true,
+        result: {
+          "0": { status: false, tracking_code: "SP1", courier_tracking_code: "", courier_code: "LLM", message: "'+6608000' is not valid 'phone'" },
+          "1": { status: true, tracking_code: "SP2", courier_tracking_code: "ST1ST", courier_code: "EMST" },
+        },
+      },
+      "/tracking_purchase/": {
+        status: true,
+        purchase_id: 452002,
+        purchase_status: "paid",
+        data: { "0": { tracking_code: "SP1", courier_code: "LLM", courier_tracking_code: "" }, "1": { tracking_code: "SP2", courier_code: "EMST", courier_tracking_code: "ST1ST" } },
+      },
+    });
+    const { json, isError } = await t.call("shippop_confirm_purchase", { purchase_id: 452002 });
+    expect(isError).toBe(false);
+    expect(json.confirmation).toBe("confirmed");
+    expect(json.courier_tracking_pending).toEqual([]);
+    expect(json.courier_rejected).toEqual(["SP1"]);
+    expect(json.shipments[0]).toMatchObject({ courier_rejected: true, courier_tracking_pending: false });
+    expect(json.guidance).toMatch(/REJECTED.*SP1.*phone/);
+    expect(json.guidance).not.toMatch(/still pending/);
+    await t.close();
+  });
+
   it("confirm rejected (status:false) and purchase unpaid → not_confirmed with SHIPPOP's message", async () => {
     const t = await connect({
       "/confirm/": { status: false, code: 400, message: "insufficient credit" },

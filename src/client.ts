@@ -9,9 +9,16 @@ export class ShippopApiError extends Error {
     public readonly endpoint: string,
     public readonly code?: string | number,
     public readonly raw?: unknown,
+    /** HTTP status of the response, when the failure came from the HTTP layer (5xx, non-JSON body). */
+    public readonly httpStatus?: number,
   ) {
     super(message);
     this.name = "ShippopApiError";
+  }
+
+  /** True when SHIPPOP did not give a proper application answer (gateway error, HTML error page, 5xx) — the request may still have been processed. */
+  get isIndeterminate(): boolean {
+    return this.httpStatus !== undefined && (this.httpStatus >= 500 || this.raw === undefined || typeof this.raw === "string");
   }
 }
 
@@ -118,6 +125,7 @@ export class ShippopClient {
         endpoint,
         res.status,
         text,
+        res.status,
       );
     }
 
@@ -127,6 +135,7 @@ export class ShippopClient {
         endpoint,
         data?.code ?? res.status,
         data,
+        res.status,
       );
     }
     if (data?.status === false && !opts.allowFailure) {

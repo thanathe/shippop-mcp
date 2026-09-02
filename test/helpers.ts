@@ -40,9 +40,10 @@ export function mockFetch(routes: Record<string, Responder | unknown>) {
     if (out instanceof Error) throw out;
     const status = (out as any)?.__http ?? 200;
     const { __http, ...payload } = (out && typeof out === "object" ? out : {}) as any;
-    return new Response(typeof out === "string" ? out : JSON.stringify(typeof out === "object" ? payload : out), {
-      status,
-      headers: { "Content-Type": "application/json" },
+    const isText = typeof out === "string";
+    return new Response(isText ? out : JSON.stringify(typeof out === "object" ? payload : out), {
+      status: isText && out.startsWith("<") ? 502 : status,
+      headers: { "Content-Type": isText ? "text/html" : "application/json" },
     });
   }) as typeof fetch;
   return { fetchImpl, calls };

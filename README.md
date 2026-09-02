@@ -108,6 +108,8 @@ Weights are in **grams**; sizes in cm.
 - **Sandbox by default.** ([ADR 0002](docs/adr/0002-default-environment-dev.md))
 - **Confirm is treated as eventually consistent.** If `/confirm/` times out or comes back without courier tracking codes, the tool checks the purchase once via `tracking_purchase` and reports `confirmation: confirmed | not_confirmed | unknown`. It never retries confirm on its own. ([ADR 0003](docs/adr/0003-confirm-is-eventually-consistent.md))
 
+**Verification status:** the crossborder tools have been exercised against the live production API (see above). The domestic tools are covered by mocked tests only — the author's account key was rejected by `/pricelist/` ("Invalid API key"), so the `/confirm/` and `/tracking_purchase/` request format (form-urlencoded, as the Postman docs show) is **not yet verified live**. Run `scripts/live-smoke.ts --book` with a working marketplace key before relying on it.
+
 Glossary of terms used in the code and tool descriptions: [CONTEXT.md](CONTEXT.md). Condensed API reference: [docs/shippop-api.md](docs/shippop-api.md).
 
 ## Scope

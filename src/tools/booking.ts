@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { ShippopClient, ShippopNetworkError, ShippopTimeoutError, toArray } from "../client.js";
+import { ShippopApiError, ShippopClient, ShippopNetworkError, ShippopTimeoutError, toArray } from "../client.js";
 import { BookingShipmentSchema } from "../schemas.js";
 import { describeErrorCode, ORDER_STATUS } from "../errors.js";
 import { guard, ok, fail } from "../result.js";
@@ -212,7 +212,7 @@ export function registerBookingTools(server: McpServer, client: ShippopClient) {
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
     },
     guard(client.env, async ({ purchase_id, tracking_codes }) => {
-      let confirmCall: "ok" | "failed" | "timeout" | "network_error" = "ok";
+      let confirmCall: "ok" | "failed" | "timeout" | "network_error" | "http_error" = "ok";
       let confirmRes: ConfirmResponse | undefined;
       let confirmErrorMessage: string | undefined;
       try {
@@ -223,8 +223,11 @@ export function registerBookingTools(server: McpServer, client: ShippopClient) {
         );
         if (!confirmRes.status) confirmCall = "failed";
       } catch (err) {
+        // Anything where SHIPPOP gave no proper application answer is indeterminate: the confirm may have
+        // gone through. Timeouts, network errors and gateway errors (5xx / HTML error pages) all reconcile below.
         if (err instanceof ShippopTimeoutError) confirmCall = "timeout";
         else if (err instanceof ShippopNetworkError) confirmCall = "network_error";
+        else if (err instanceof ShippopApiError && err.isIndeterminate) confirmCall = "http_error";
         else throw err;
         confirmErrorMessage = (err as Error).message;
       }
@@ -278,12 +281,15 @@ export function registerBookingTools(server: McpServer, client: ShippopClient) {
         }
       }
 
+      // A shipment the courier explicitly rejected (confirm_status false + message) is not "pending" — its
+      // courier tracking code will never arrive. Only shipments without a verdict are pending.
       const shipments = [...byCode.values()].map((s) => ({
         ...s,
-        courier_tracking_pending: confirmation === "confirmed" && !s.courier_tracking_code,
+        courier_rejected: s.confirm_status === false,
+        courier_tracking_pending: confirmation === "confirmed" && !s.courier_tracking_code && s.confirm_status !== false,
       }));
       const pending = shipments.filter((s) => s.courier_tracking_pending).map((s) => s.tracking_code);
-      const failedItems = shipments.filter((s) => s.confirm_status === false);
+      const failedItems = shipments.filter((s) => s.courier_rejected);
 
       let guidance: string;
       switch (confirmation) {
@@ -292,7 +298,11 @@ export function registerBookingTools(server: McpServer, client: ShippopClient) {
             pending.length > 0
               ? `Purchase ${purchase_id} is PAID. Courier tracking codes are still pending for ${pending.join(", ")} — call shippop_track_shipment with those SP codes in a moment to get them. Do NOT confirm or book again.`
               : `Purchase ${purchase_id} is PAID and every shipment has a courier tracking code. Next: shippop_get_label to print labels.`;
-          if (failedItems.length) guidance += ` ${failedItems.length} shipment(s) were rejected by the courier — see message.`;
+          if (failedItems.length) {
+            guidance += ` ${failedItems.length} shipment(s) were REJECTED by the courier and will not ship: ${failedItems
+              .map((s) => `${s.tracking_code} (${s.message ?? "no reason given"})`)
+              .join("; ")}. Fix the data and book those again as a new purchase.`;
+          }
           break;
         case "not_confirmed":
           guidance = `Purchase ${purchase_id} is still UNPAID — the confirm did not go through. It is safe to call shippop_confirm_purchase again${confirmRes?.message ? ` after fixing: ${confirmRes.message}` : ""}.`;
@@ -311,6 +321,7 @@ export function registerBookingTools(server: McpServer, client: ShippopClient) {
         reconcile_error: reconcileError,
         shipments,
         courier_tracking_pending: pending,
+        courier_rejected: failedItems.map((s) => s.tracking_code),
         guidance,
       };
       return confirmation === "unknown" ? fail(payload) : ok(payload);

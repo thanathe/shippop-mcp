@@ -42,7 +42,9 @@ export function registerLabelTools(server: McpServer, client: ShippopClient, con
         replace_origin: z
           .record(z.string(), AddressSchema.partial())
           .optional()
-          .describe("Override the sender shown on the label, keyed by SP tracking code"),
+          .describe(
+            "Label sender override, keyed by SP tracking code. For parcel shops (B2B) that book shipments from the shop's own address: the courier still collects at the shop, but the label shows the shop's customer as the sender so the receiver knows who sent it. Only the printed label changes.",
+          ),
         order_date: z.string().optional().describe("Order date printed on label, e.g. 2026-09-02"),
         print_date: z.string().optional().describe("Print date printed on label, e.g. 2026-09-02"),
       },
