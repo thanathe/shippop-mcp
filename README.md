@@ -118,7 +118,8 @@ The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=produ
 | `shippop_inter_list_countries` | Destination countries and ISO codes | none |
 | `shippop_inter_check_price` | Quote by weight (g) + destination country; returns `courier_ref` | none |
 | `shippop_inter_get_coverages` | Optional insurance for a courier | none |
-| `shippop_inter_create_shipments` | Draft shipments with customs declaration → `INTxxxx` codes | creates drafts |
+| `shippop_inter_list_shipments` | Your crossborder shipments with status + goods/HS declaration (undocumented endpoint) | none |
+| `shippop_inter_create_shipments` | Draft shipments with customs declaration → `INTxxxx` codes; supports `taxpayer` (sender/receiver) | creates drafts |
 | `shippop_inter_update_shipment` | Edit a draft | — |
 | `shippop_inter_calculate_order` | Exact total for drafts + courier | none |
 | `shippop_inter_create_order` | Create the order → `payment_url` to pay (`credit_term` confirms immediately, business accounts only) | 💸 leads to payment |

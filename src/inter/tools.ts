@@ -171,6 +171,37 @@ export function registerInterTools(server: McpServer, client: InterClient, env: 
   );
 
   server.registerTool(
+    "shippop_inter_list_shipments",
+    {
+      title: "Crossborder: list my shipments",
+      description:
+        "List this account's crossborder shipments (drafts and ordered) with status, destination, goods declaration and HS codes. " +
+        "Useful to find existing drafts before creating new ones, or to reuse a past goods declaration. (Undocumented endpoint, verified live.)",
+      inputSchema: {
+        page: z.number().int().positive().default(1),
+        limit: z.number().int().positive().max(200).default(50),
+      },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+    },
+    interGuard(env, async ({ page, limit }) => {
+      const res = await client.request<{ shipments?: any[]; total_shipment_amount?: number }>("GET", "/api/platform/shipment", undefined, { page, limit });
+      const shipments = (res.shipments ?? []).map((s) => ({
+        tracking_code: s.tracking_code,
+        status: s.status,
+        type: s.type,
+        total_weight_g: s.total_weight,
+        dimensions_cm: { width: s.width, length: s.length, height: s.height },
+        taxpayer: s.taxpayer,
+        require_coverage: s.require_coverage,
+        destination: s.destination_address ? { name: s.destination_address.name, city: s.destination_address.city, postcode: s.destination_address.postcode, country_id: s.destination_address.country_id } : undefined,
+        goods: (s.goods ?? []).map((g: any) => ({ name: g.name, pieces: g.pieces, weight_g: g.weight, price: g.price, currency: g.currency, hs_code: g.hs_code || undefined, sku_number: g.sku_number || undefined })),
+        order: s.order_item ?? null,
+      }));
+      return ok({ environment: env, page, limit, total: res.total_shipment_amount, shipments });
+    }),
+  );
+
+  server.registerTool(
     "shippop_inter_update_shipment",
     {
       title: "Crossborder: update a draft shipment",

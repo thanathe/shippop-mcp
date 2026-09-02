@@ -18,6 +18,7 @@ export const InterOriginAddressSchema = z
 
 export const InterDestinationAddressSchema = InterOriginAddressSchema.extend({
   country_code: z.string().length(2).describe("Destination country, ISO alpha-2 (e.g. US, JP, TW)"),
+  is_residential: z.boolean().optional().describe("Receiver is a private home (affects courier surcharges). Seen in live data; undocumented."),
 }).describe("Receiver address abroad, in English");
 
 export const InterGoodsSchema = z.object({
@@ -39,6 +40,10 @@ export const InterShipmentSchema = z.object({
   total_weight: z.number().int().positive().describe("Total weight incl. packaging, in GRAMS"),
   remark: z.string().optional(),
   require_coverage: z.boolean().default(false).describe("Buy the courier's extra insurance coverage"),
+  taxpayer: z
+    .enum(["sender", "receiver"])
+    .optional()
+    .describe("Who pays import duties/taxes at destination: receiver (default at SHIPPOP, DDU) or sender (DDP). Seen in live data; undocumented."),
   origin_address: InterOriginAddressSchema,
   destination_address: InterDestinationAddressSchema,
   goods: z.array(InterGoodsSchema).min(1).describe("Customs declaration lines"),

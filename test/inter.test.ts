@@ -22,7 +22,7 @@ describe("crossborder tools", () => {
       { inter },
     );
     const names = (await t.client.listTools()).tools.map((x) => x.name);
-    expect(names).toHaveLength(22);
+    expect(names).toHaveLength(23);
     const { json, isError } = await t.call("shippop_inter_check_price", { weight: 1500, country_code: "au" });
     expect(isError).toBe(false);
     expect(t.calls[0].endpoint).toBe("/authen/getJWTToken");
@@ -114,6 +114,37 @@ describe("crossborder tools", () => {
     const del = await t.call("shippop_inter_delete_shipments", { tracking_codes: ["INT00004528"] });
     expect(del.isError).toBe(false);
     expect(t.calls[t.calls.length - 1].method).toBe("DELETE");
+    await t.close();
+  });
+
+  it("lists shipments with goods and passes taxpayer/is_residential through on create", async () => {
+    const t = await connect(
+      {
+        "/authen/getJWTToken": TOKEN,
+        "/api/platform/shipment": (req: any) =>
+          req.method === "GET"
+            ? { shipments: [{ tracking_code: "INT1", status: "waiting", type: "parcel", total_weight: 1500, width: 1, length: 2, height: 3, taxpayer: "receiver", destination_address: { name: "K", city: "Tokyo", postcode: "150", country_id: 110 }, goods: [{ name: "Clothes", pieces: 1, weight: 1000, price: 1000, currency: "THB", hs_code: "620520" }], order_item: null }], total_shipment_amount: 1 }
+            : {},
+        "/api/platform/shipment/many": { shipments: [{ tracking_code: "INT2" }] },
+      },
+      { inter },
+    );
+    const l = await t.call("shippop_inter_list_shipments", {});
+    expect(l.json.total).toBe(1);
+    expect(l.json.shipments[0].goods[0]).toMatchObject({ name: "Clothes", hs_code: "620520" });
+    expect(t.calls[1].url).toContain("page=1");
+
+    await t.call("shippop_inter_create_shipments", {
+      shipments: [{
+        width: 1, length: 1, height: 1, total_weight: 100, taxpayer: "sender",
+        origin_address: { name: "a", phone: "+66", address: "x", state: "s", city: "c", postcode: "1" },
+        destination_address: { name: "b", phone: "+81", address: "y", state: "s", city: "c", postcode: "2", country_code: "JP", is_residential: true },
+        goods: [{ name: "Clothes", pieces: 1, weight: 100, price: 10, manufacturer_country_code: "TH", hs_code: "620520" }],
+      }],
+    });
+    const sent = t.calls.find((c) => c.endpoint === "/api/platform/shipment/many")!.body.shipments[0];
+    expect(sent.taxpayer).toBe("sender");
+    expect(sent.destination_address.is_residential).toBe(true);
     await t.close();
   });
 
