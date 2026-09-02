@@ -118,7 +118,10 @@ Weights are in **grams**; sizes in cm.
 - **Sandbox by default.** ([ADR 0002](docs/adr/0002-default-environment-dev.md))
 - **Confirm is treated as eventually consistent.** If `/confirm/` times out, fails at the HTTP layer (5xx / HTML gateway page), or comes back without courier tracking codes, the tool checks the purchase once via `tracking_purchase` and reports `confirmation: confirmed | not_confirmed | unknown`. Shipments the courier explicitly rejected are reported as `courier_rejected`, not pending. It never retries confirm on its own. ([ADR 0003](docs/adr/0003-confirm-is-eventually-consistent.md))
 
-**Verification status:** the crossborder tools have been exercised against the live production API (see above). The domestic tools are covered by mocked tests only — the author's account key was rejected by `/pricelist/` ("Invalid API key"), so the `/confirm/` and `/tracking_purchase/` request format (form-urlencoded, as the Postman docs show) is **not yet verified live**. Run `scripts/live-smoke.ts --book` with a working marketplace key before relying on it.
+**Verification status (live production API, 2026-09-02):**
+
+- Domestic — verified: `list_couriers`, `check_price`, `create_booking` (unpaid), `get_purchase` (form-urlencoded `/tracking_purchase/` works), `track_shipment`. `get_label` correctly refuses an unpaid purchase ("Purchase unconfirmed"). **Not exercised: `confirm_purchase`, `cancel_shipment`, `request_pickup`, `list_pickups`** — they cost money or need a paid shipment; the confirm request format matches the verified `tracking_purchase` one.
+- Crossborder — verified: login, countries, price, coverages, create/calculate/delete shipments. `create_order` blocked on the test account by `order.unpaidInvoice`; `get_labels`/tracking need a paid order.
 
 Glossary of terms used in the code and tool descriptions: [CONTEXT.md](CONTEXT.md). [docs/shippop-api.md](docs/shippop-api.md) is an auto-scraped snapshot of the Postman collection kept for offline grep — the [official docs](#official-shippop-api-documentation) are authoritative.
 
@@ -141,6 +144,7 @@ SHIPPOP_API_KEY=… SHIPPOP_EMAIL=… npm run dev
 #   --inter-order  + crossborder draft → calculate → create order (prints payment_url, does NOT pay) → delete draft
 cp .env.example .env   # fill in
 npx tsx scripts/live-smoke.ts --book --inter
+npx tsx scripts/live-readback.ts <purchase_id> <SPxxxx>   # read-only: get_purchase, track, label(json) of an existing purchase
 ```
 
 Not published to npm yet — until then, clone this repo, `npm install && npm run build`, and point your MCP config at `node /path/to/shippop-mcp/dist/index.js` instead of `npx -y shippop-mcp`.

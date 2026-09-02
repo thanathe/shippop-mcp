@@ -75,6 +75,14 @@ describe("shippop_get_label", () => {
     await t.close();
   });
 
+  it("explains 'Purchase unconfirmed' from SHIPPOP", async () => {
+    const t = await connect({ "/label/": { status: false, code: 404, message: "Error: Purchase unconfirmed" } });
+    const { isError, json } = await t.call("shippop_get_label", { purchase_id: 43469596 });
+    expect(isError).toBe(true);
+    expect(json.message).toMatch(/only available after shippop_confirm_purchase/);
+    await t.close();
+  });
+
   it("errors when neither purchase_id nor tracking_codes given", async () => {
     const t = await connect({});
     const { isError, json } = await t.call("shippop_get_label", {});

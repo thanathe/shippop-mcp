@@ -12,8 +12,9 @@ export interface CourierInfo {
 export const COURIERS: CourierInfo[] = [
   { code: "SHF", name: "SHIPPOP Fruit" },
   { code: "EMST", name: "Thailand Post EMS" },
+  { code: "EMSXP", name: "Thailand Post SPRESS (pickup)", note: "Seen live 2026-09; not in the published courier table" },
   { code: "ECP", name: "Thailand Post eCo-post" },
-  { code: "DHL", name: "DHL" },
+  { code: "DHL", name: "DHL Eco", note: "Courier tracking code is assigned already at booking (before confirm)" },
   { code: "FLE", name: "Flash Express" },
   { code: "FLEB", name: "Flash Express Bulky", note: "Large parcels" },
   { code: "FLEF", name: "Flash Express Fruit", note: "Fruit and vegetables" },

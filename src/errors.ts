@@ -11,6 +11,7 @@ export const ERROR_CODES: Record<string, string> = {
   ERR_NOT_SUPPORT_COD: "This courier does not support COD",
   NOT_SUPPORT_COD: "This courier service does not support COD",
   INVALID_WEIGHT: "Invalid weight",
+  ERR_WEIGHT: "Weight outside the courier's supported range",
   ERR_OVER_WEIGHT: "Parcel is over the courier's weight limit",
   ERR_MIN_ORDER_10: "Courier requires a minimum of 10 shipments per booking",
   ERR_OUT_OF_AREA: "Service unavailable in this area",

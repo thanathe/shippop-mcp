@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { ShippopClient } from "../client.js";
+import { ShippopApiError, ShippopClient } from "../client.js";
 import type { ShippopConfig } from "../config.js";
 import { AddressSchema, LabelSizeSchema } from "../schemas.js";
 import { guard, ok } from "../result.js";
@@ -102,7 +102,18 @@ export function registerLabelTools(server: McpServer, client: ShippopClient, con
         stem = args.tracking_codes!.length === 1 ? args.tracking_codes![0] : `${args.tracking_codes![0]}+${args.tracking_codes!.length - 1}`;
       }
 
-      const res = await client.post<LabelResponse>(endpoint, body);
+      let res: LabelResponse;
+      try {
+        res = await client.post<LabelResponse>(endpoint, body);
+      } catch (err) {
+        // Verified live: SHIPPOP answers 404 "Purchase unconfirmed" for labels of an unpaid purchase.
+        if (err instanceof ShippopApiError && /unconfirmed/i.test(err.message)) {
+          throw new Error(
+            `${err.message} — labels are only available after shippop_confirm_purchase (the purchase is still unpaid). Confirm first, with the user's approval.`,
+          );
+        }
+        throw err;
+      }
 
       if (args.format === "json") {
         return ok({ environment: client.env, label: res.json });
