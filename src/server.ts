@@ -11,7 +11,7 @@ import { InterClient } from "./inter/client.js";
 import { registerInterTools } from "./inter/tools.js";
 
 export const SERVER_NAME = "shippop-mcp";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "1.0.0";
 
 export function createServer(config: ShippopConfig, fetchImpl?: FetchLike): McpServer {
   const client = new ShippopClient(config, fetchImpl);
