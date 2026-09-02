@@ -73,7 +73,9 @@ The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=produ
 | `shippop_get_label` | Render labels as PDF/HTML (written to disk, path returned) or JSON; supports a per-shipment sender override for parcel shops | writes a file |
 | `shippop_cancel_shipment` | Ask the courier to cancel a confirmed shipment (courier tracking code) | courier-side cancel |
 | `shippop_request_pickup` | Ask the courier to collect a confirmed shipment | creates pickup |
-| `shippop_list_pickups` | List pickup requests | none |
+| `shippop_list_pickups` | List pickup requests (default: last 30 days) | none |
+| `shippop_update_pickup` | Change a pickup request (Flash: assign staff) by `courier_pickup_id` | edits pickup |
+| `shippop_cancel_pickup` | Cancel a pickup appointment (shipment stays confirmed) | cancels pickup |
 
 ### Crossborder tools (SHIPPOP Inter v2)
 
@@ -120,14 +122,14 @@ Weights are in **grams**; sizes in cm.
 
 **Verification status (live production API, 2026-09-02):**
 
-- Domestic — verified: `list_couriers`, `check_price`, `create_booking` (unpaid), `get_purchase` (form-urlencoded `/tracking_purchase/` works), `track_shipment`, `list_pickups` (1,800+ historical rows came back oldest-first in ~14 s, hence the default 30-day window). `get_label` correctly refuses an unpaid purchase ("Purchase unconfirmed"). **Not exercised: `confirm_purchase`, `cancel_shipment`, `request_pickup`** — they cost money or need a paid shipment; the confirm request format matches the verified `tracking_purchase` one.
+- Domestic — verified: `list_couriers`, `check_price`, `create_booking` (unpaid), `get_purchase` (form-urlencoded `/tracking_purchase/` works), `track_shipment`, `list_pickups` (1,800+ historical rows came back oldest-first in ~14 s, hence the default 30-day window). `get_label` correctly refuses an unpaid purchase ("Purchase unconfirmed"). **Not exercised: `confirm_purchase`, `cancel_shipment`, `request_pickup`, `update_pickup`, `cancel_pickup`** — they cost money or need a paid shipment; the confirm request format matches the verified `tracking_purchase` one.
 - Crossborder — verified: login, countries, price, coverages, create/calculate/delete shipments. `create_order` blocked on the test account by `order.unpaidInvoice`; `get_labels`/tracking need a paid order.
 
 Glossary of terms used in the code and tool descriptions: [CONTEXT.md](CONTEXT.md). [docs/shippop-api.md](docs/shippop-api.md) is an auto-scraped snapshot of the Postman collection kept for offline grep — the [official docs](#official-shippop-api-documentation) are authoritative.
 
 ## Scope
 
-v1 covers the SHIPPOP **domestic** core flow plus the **Crossborder v2** order flow. Not included (yet): Courier Info API (needs a separate Basic Auth credential), reports (COD, billing), verify-account/KYC, rebate (own courier account), box presets, dropoff partner APIs, update-parcel (Flash only), pickup update/cancel, webhooks.
+v1 covers the SHIPPOP **domestic** core flow plus the **Crossborder v2** order flow. Not included (yet): Courier Info API (needs a separate Basic Auth credential), reports (COD, billing), verify-account/KYC, rebate (own courier account), box presets, dropoff partner APIs, update-parcel (Flash only), the Flash-specific call-to-pickup variant, webhooks.
 
 ## Development
 

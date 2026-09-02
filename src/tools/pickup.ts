@@ -90,6 +90,47 @@ export function registerPickupTools(server: McpServer, client: ShippopClient) {
   );
 
   server.registerTool(
+    "shippop_update_pickup",
+    {
+      title: "Update pickup request",
+      description:
+        "Change an existing pickup request by its courier_pickup_id (the `id` from shippop_list_pickups or the value returned by shippop_request_pickup). " +
+        "Currently the only documented change is courier_staff_id (Flash Express: the staff member who should collect).",
+      inputSchema: {
+        courier_pickup_id: z.number().int().positive().describe("SHIPPOP pickup id (`id` in shippop_list_pickups)"),
+        courier_staff_id: z.number().int().positive().optional().describe("Flash Express staff id to assign"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    },
+    guard(client.env, async ({ courier_pickup_id, courier_staff_id }) => {
+      const body: Record<string, unknown> = { courier_pickup_id };
+      if (courier_staff_id !== undefined) body.courier_staff_id = courier_staff_id;
+      const res = await client.post("/pickup/update/", body);
+      return ok({ environment: client.env, courier_pickup_id, updated: true, courier_response: (res as { data?: unknown }).data });
+    }),
+  );
+
+  server.registerTool(
+    "shippop_cancel_pickup",
+    {
+      title: "Cancel pickup request",
+      description:
+        "Cancel a pickup request by its courier_pickup_id (the `id` from shippop_list_pickups). Only the pickup appointment is cancelled — the shipment itself stays confirmed; use shippop_cancel_shipment for that.",
+      inputSchema: {
+        courier_pickup_id: z.number().int().positive().describe("SHIPPOP pickup id (`id` in shippop_list_pickups)"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    },
+    guard(client.env, async ({ courier_pickup_id }) => {
+      const res = await client.post("/pickup/cancel/", { courier_pickup_id }, { allowFailure: true });
+      if (!res.status) {
+        return fail({ error: "cancel_pickup_rejected", environment: client.env, code: res.code, message: res.message, courier_pickup_id });
+      }
+      return ok({ environment: client.env, courier_pickup_id, cancelled: true });
+    }),
+  );
+
+  server.registerTool(
     "shippop_list_pickups",
     {
       title: "List pickup requests",

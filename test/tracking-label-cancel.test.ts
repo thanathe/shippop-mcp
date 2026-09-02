@@ -122,6 +122,18 @@ describe("shippop_request_pickup / list_pickups", () => {
     expect(json.courier_pickup_id).toBe(9);
     await t.close();
   });
+  it("updates and cancels a pickup by courier_pickup_id", async () => {
+    const t = await connect({ "/pickup/update/": { status: true }, "/pickup/cancel/": { status: false, code: 400, message: "already completed" } });
+    const u = await t.call("shippop_update_pickup", { courier_pickup_id: 229, courier_staff_id: 63025 });
+    expect(u.isError).toBe(false);
+    expect(t.calls[0].body).toEqual({ api_key: "test-key", courier_pickup_id: 229, courier_staff_id: 63025 });
+    const c = await t.call("shippop_cancel_pickup", { courier_pickup_id: 229 });
+    expect(c.isError).toBe(true);
+    expect(c.json.error).toBe("cancel_pickup_rejected");
+    expect(c.json.message).toBe("already completed");
+    await t.close();
+  });
+
   it("defaults to a 30-day window when unfiltered", async () => {
     const t = await connect({ "/pickup/": { status: true, data: { items: [], pages: 0, page: 1, perpage: 25, total: "0" } } });
     const { json } = await t.call("shippop_list_pickups", {});

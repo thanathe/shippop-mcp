@@ -20,7 +20,7 @@ export function createServer(config: ShippopConfig, fetchImpl?: FetchLike): McpS
     {
       instructions:
         `SHIPPOP domestic shipping (Thailand). Environment: ${config.env.toUpperCase()}${config.env === "dev" ? " (sandbox — no real money)" : " (REAL money)"}. ` +
-        "Flow: shippop_check_price → shippop_create_booking (unpaid draft, returns SP tracking codes — keep them) → get the user's explicit OK → shippop_confirm_purchase (pays + dispatches) → shippop_get_label → shippop_track_shipment. " +
+        "Flow: shippop_check_price → shippop_create_booking (unpaid draft, returns SP tracking codes — keep them) → get the user's explicit OK → shippop_confirm_purchase (pays + dispatches) → shippop_get_label → shippop_request_pickup (or drop off) → shippop_track_shipment. " +
         "Two kinds of tracking code: SHIPPOP code (SPxxxx, from booking; used for tracking/labels) and courier tracking code (assigned after confirm, may arrive late; used for cancel/pickup). " +
         "Weights are in grams. Never confirm without the user agreeing to the price, and never re-confirm a purchase without checking shippop_get_purchase first." +
         (config.inter

@@ -9,7 +9,7 @@ describe("crossborder tools", () => {
     const t = await connect({});
     const names = (await t.client.listTools()).tools.map((x) => x.name);
     expect(names.some((n) => n.startsWith("shippop_inter_"))).toBe(false);
-    expect(names).toHaveLength(10);
+    expect(names).toHaveLength(12);
     await t.close();
   });
 
@@ -22,7 +22,7 @@ describe("crossborder tools", () => {
       { inter },
     );
     const names = (await t.client.listTools()).tools.map((x) => x.name);
-    expect(names).toHaveLength(20);
+    expect(names).toHaveLength(22);
     const { json, isError } = await t.call("shippop_inter_check_price", { weight: 1500, country_code: "au" });
     expect(isError).toBe(false);
     expect(t.calls[0].endpoint).toBe("/authen/getJWTToken");
