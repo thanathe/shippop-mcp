@@ -1,0 +1,55 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.thanathe/shippop-mcp",
+  "description": "SHIPPOP (Thailand) shipping: check price, book, confirm, label, track, cancel, pickup; plus crossborder orders.",
+  "repository": {
+    "url": "https://github.com/thanathe/shippop-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "shippop-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SHIPPOP_API_KEY",
+          "description": "SHIPPOP marketplace API key",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "SHIPPOP_EMAIL",
+          "description": "Email of the SHIPPOP account that owns the key",
+          "isRequired": true
+        },
+        {
+          "name": "SHIPPOP_ENV",
+          "description": "dev (default, sandbox) or production (real money)",
+          "isRequired": false,
+          "default": "dev"
+        },
+        {
+          "name": "SHIPPOP_INTER_USERNAME",
+          "description": "SHIPPOP account login email \u2014 enables crossborder tools",
+          "isRequired": false
+        },
+        {
+          "name": "SHIPPOP_INTER_PASSWORD",
+          "description": "SHIPPOP account login password \u2014 enables crossborder tools",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "SHIPPOP_LABEL_DIR",
+          "description": "Directory where label PDFs are written",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

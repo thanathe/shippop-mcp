@@ -1,5 +1,7 @@
 # shippop-mcp
 
+[![npm](https://img.shields.io/npm/v/shippop-mcp)](https://www.npmjs.com/package/shippop-mcp) [![license](https://img.shields.io/npm/l/shippop-mcp)](LICENSE)
+
 MCP server for the [SHIPPOP](https://www.shippop.com) shipping API (Thailand) — domestic and crossborder.
 Lets Claude Desktop, Claude Code, Cursor or any MCP client **check prices, book, confirm, print labels, track, cancel and request pickup** for parcels on your SHIPPOP account.
 
@@ -180,7 +182,7 @@ npx tsx scripts/live-readback.ts <purchase_id> <SPxxxx>   # read-only: get_purch
 npx tsx scripts/live-call.ts shippop_list_pickups '{}'     # call any single tool (refuses confirm_purchase)
 ```
 
-Running from source instead of npm: clone this repo, `npm install && npm run build`, and point your MCP config at `node /path/to/shippop-mcp/dist/index.js`.
+Published on npm as [`shippop-mcp`](https://www.npmjs.com/package/shippop-mcp) — `npx -y shippop-mcp` always runs the latest release. Running from source instead: clone this repo, `npm install && npm run build`, and point your MCP config at `node /path/to/shippop-mcp/dist/index.js`.
 
 ## License
 

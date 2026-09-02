@@ -45,5 +45,10 @@
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",
     "vitest": "^4.1.11"
+  },
+  "mcpName": "io.github.thanathe/shippop-mcp",
+  "homepage": "https://github.com/thanathe/shippop-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/thanathe/shippop-mcp/issues"
   }
 }
