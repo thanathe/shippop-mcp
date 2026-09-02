@@ -45,18 +45,44 @@ claude mcp add shippop -e SHIPPOP_API_KEY=your-api-key -e SHIPPOP_EMAIL=you@exam
 
 ### Environment variables
 
+Two independent credential sets — each unlocks its own group of tools:
+
+**Domestic tools (`shippop_*`) — API key. Required.**
+
 | Variable | Required | Default | Notes |
 |---|---|---|---|
-| `SHIPPOP_API_KEY` | yes | — | Marketplace API key |
-| `SHIPPOP_EMAIL` | yes | — | Email of the SHIPPOP account (sent with bookings) |
-| `SHIPPOP_ENV` | no | **`dev`** | `dev` → `mkpservice.shippop.dev` (sandbox), `production` → `mkpservice.shippop.com` (**real money**) |
-| `SHIPPOP_BASE_URL` | no | per env | Override the base URL. If it is one of the known SHIPPOP hosts, `SHIPPOP_ENV` is inferred from it (and a contradicting `SHIPPOP_ENV` is rejected) |
-| `SHIPPOP_LABEL_DIR` | no | `~/Downloads/shippop-labels` | Where `shippop_get_label` writes PDF/HTML files. The tool may choose a sub-directory but can never write outside this root |
-| `SHIPPOP_INTER_USERNAME` | no | — | SHIPPOP account **login email** — enables the crossborder `shippop_inter_*` tools |
-| `SHIPPOP_INTER_PASSWORD` | no | — | SHIPPOP account **login password** (set together with the username) |
+| `SHIPPOP_API_KEY` | **yes** | — | Marketplace API key issued by SHIPPOP |
+| `SHIPPOP_EMAIL` | **yes** | — | Email of the SHIPPOP account that owns the key (sent with bookings) |
+| `SHIPPOP_ENV` | no | **`dev`** | `dev` → `mkpservice.shippop.dev` (sandbox), `production` → `mkpservice.shippop.com` (**real money**). Also selects the crossborder host |
+| `SHIPPOP_BASE_URL` | no | per env | Override the domestic base URL. A known SHIPPOP host also sets `SHIPPOP_ENV`; a contradicting `SHIPPOP_ENV` is rejected |
+
+**Crossborder tools (`shippop_inter_*`) — account login. Required only if you want these tools; without them the server starts with domestic tools only.**
+
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `SHIPPOP_INTER_USERNAME` | **yes, for crossborder** | — | Your SHIPPOP account **login email** (not the API key) |
+| `SHIPPOP_INTER_PASSWORD` | **yes, for crossborder** | — | Your SHIPPOP account **login password** — must be set together with the username |
 | `SHIPPOP_INTER_BASE_URL` | no | per env | `inter.shippop.dev` / `inter.shippop.com` |
-| `SHIPPOP_TIMEOUT_MS` | no | `20000` | Per-request timeout |
-| `SHIPPOP_CONFIRM_TIMEOUT_MS` | no | `60000` | Timeout for the (slow) confirm call |
+
+**Optional tuning**
+
+| Variable | Default | Notes |
+|---|---|---|
+| `SHIPPOP_LABEL_DIR` | `~/Downloads/shippop-labels` | Where `shippop_get_label` writes PDF/HTML files. The tool may choose a sub-directory but can never write outside this root |
+| `SHIPPOP_TIMEOUT_MS` | `20000` | Per-request timeout |
+| `SHIPPOP_CONFIRM_TIMEOUT_MS` | `60000` | Timeout for the (slow) confirm call |
+
+Full example with both credential sets:
+
+```json
+"env": {
+  "SHIPPOP_API_KEY": "your-api-key",
+  "SHIPPOP_EMAIL": "you@example.com",
+  "SHIPPOP_ENV": "production",
+  "SHIPPOP_INTER_USERNAME": "you@example.com",
+  "SHIPPOP_INTER_PASSWORD": "your-shippop-password"
+}
+```
 
 The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=production` when you are ready to ship for real. Every tool result includes the `environment` it ran against (`dev`, `production`, or `custom` for an unknown `SHIPPOP_BASE_URL`).
 
@@ -83,7 +109,7 @@ The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=produ
 
 ### Crossborder tools (SHIPPOP Inter v2)
 
-Enabled only when `SHIPPOP_INTER_USERNAME` / `SHIPPOP_INTER_PASSWORD` are set. This is a separate SHIPPOP API (`inter.shippop.com`, JWT auth, English addresses, customs `goods` lines).
+**Requires `SHIPPOP_INTER_USERNAME` + `SHIPPOP_INTER_PASSWORD`** (your SHIPPOP login — the domestic API key does not work here). Without them these tools are not registered at all. This is a separate SHIPPOP API (`inter.shippop.com`, JWT auth, English addresses, customs `goods` lines).
 
 | Tool | What it does | Side effects |
 |---|---|---|
