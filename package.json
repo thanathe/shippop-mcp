@@ -33,7 +33,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/thanatcha/shippop-mcp"
+    "url": "https://github.com/thanathe/shippop-mcp"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
