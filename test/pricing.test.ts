@@ -38,6 +38,14 @@ describe("shippop_check_price", () => {
     expect(isError).toBe(true);
     expect(json.error).toBe("shippop_api_error");
     expect(json.message).toMatch(/Incomplete request/);
+    expect(json.hint).toBeUndefined();
+    await t.close();
+  });
+
+  it("explains 'Invalid API key' on the dev host as a possible production key", async () => {
+    const t = await connect({ "/pricelist/": { status: false, code: 400, message: "Error: Invalid API key" } });
+    const { json } = await t.call("shippop_check_price", { shipments: [{ from: ADDR_FROM, to: ADDR_TO, parcel: PARCEL }] });
+    expect(json.hint).toMatch(/set SHIPPOP_ENV=production/);
     await t.close();
   });
 });

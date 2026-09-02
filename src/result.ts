@@ -18,6 +18,13 @@ export function guard<A>(env: string, fn: (args: A) => Promise<CallToolResult>):
     } catch (err) {
       if (err instanceof ShippopApiError) {
         const code = typeof err.code === "string" ? err.code : undefined;
+        // Verified live: the dev and production hosts have separate API keys — a production key on
+        // mkpservice.shippop.dev (our default) answers "Invalid API key", which first-time users read as "broken".
+        const hint = /invalid api key/i.test(err.message)
+          ? env === "dev"
+            ? "SHIPPOP dev and production use different API keys. If your key was issued for production, set SHIPPOP_ENV=production (real money); otherwise ask SHIPPOP for a dev key."
+            : "Check SHIPPOP_API_KEY (marketplace API key from SHIPPOP) and that it was issued for production."
+          : undefined;
         return fail({
           error: "shippop_api_error",
           environment: env,
@@ -25,6 +32,7 @@ export function guard<A>(env: string, fn: (args: A) => Promise<CallToolResult>):
           code: err.code,
           meaning: describeErrorCode(code),
           message: err.message,
+          hint,
           raw: err.raw,
         });
       }

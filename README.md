@@ -60,6 +60,10 @@ claude mcp add shippop -e SHIPPOP_API_KEY=your-api-key -e SHIPPOP_EMAIL=you@exam
 
 The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=production` when you are ready to ship for real. Every tool result includes the `environment` it ran against.
 
+> **Dev and production keys are different.** A production API key is rejected by the dev host with `Invalid API key` (verified live). If SHIPPOP only gave you a production key, set `SHIPPOP_ENV=production` — and remember that `shippop_confirm_purchase` then spends real money.
+
+> **Crossborder credentials are your account password.** `SHIPPOP_INTER_PASSWORD` sits in plain text in your MCP client config; only set it on a machine you trust, and prefer a dedicated SHIPPOP login if you can.
+
 ## Tools
 
 | Tool | What it does | Side effects |
