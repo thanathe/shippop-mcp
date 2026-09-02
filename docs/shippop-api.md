@@ -1809,4 +1809,4 @@ Response example (Get pickup list):
 
 ## Crossborder v2 APIs
 
-Out of scope for this MCP (separate base URL and JWT auth).
+Implemented as the `shippop_inter_*` tools (base `https://inter.shippop.com`, JWT auth from account login). Not snapshotted here — see the "Crossborder v2 APIs" folder of the official Postman collection: https://documenter.getpostman.com/view/10021496/Tzz8qwkE
