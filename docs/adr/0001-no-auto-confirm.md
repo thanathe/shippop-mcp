@@ -1,0 +1,5 @@
+# Confirm is always a separate tool; `force_confirm` is never exposed
+
+SHIPPOP's Booking API accepts `force_confirm: 1` to book and confirm in one call. We deliberately never use it: `create_booking` only ever creates an `unpaid` Purchase, and money moves only when the model explicitly calls `confirm_purchase` (annotated as destructive).
+
+Two reasons. First, this server is driven by an LLM that may misjudge intent, and an accidental confirm is real money and a real courier dispatch. Second — and decisive — SHIPPOP calls can time out without a response (see ADR 0003). With the two-step flow a Booking that times out simply produced nothing: no SP code means nothing was created, and it is safe to book again. With `force_confirm`, the same timeout leaves a *confirmed* Purchase whose SP code and Courier Tracking Code we never received: the courier turns up to collect, there is no label to print, and the only way out is to book again — a duplicate paid shipment. Keeping Booking (idempotent-on-failure) separate from Confirm (reconcilable via `tracking_purchase`) is what makes every failure mode recoverable.

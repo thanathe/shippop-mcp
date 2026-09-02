@@ -1,0 +1,49 @@
+{
+  "name": "shippop-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the SHIPPOP domestic shipping API (Thailand): check price, book, confirm, label, track, cancel, pickup.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "shippop-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "shippop",
+    "shipping",
+    "thailand",
+    "logistics"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thanatcha/shippop-mcp"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^2.1.9"
+  }
+}

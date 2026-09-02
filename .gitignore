@@ -1,0 +1,7 @@
+*.log
+.DS_Store
+.claude/settings.local.json
+.env
+.serena/
+dist/
+node_modules/
