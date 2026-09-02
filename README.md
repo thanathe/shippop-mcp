@@ -150,7 +150,7 @@ npx tsx scripts/live-readback.ts <purchase_id> <SPxxxx>   # read-only: get_purch
 npx tsx scripts/live-call.ts shippop_list_pickups '{}'     # call any single tool (refuses confirm_purchase)
 ```
 
-Not published to npm yet — until then, clone this repo, `npm install && npm run build`, and point your MCP config at `node /path/to/shippop-mcp/dist/index.js` instead of `npx -y shippop-mcp`.
+Running from source instead of npm: clone this repo, `npm install && npm run build`, and point your MCP config at `node /path/to/shippop-mcp/dist/index.js`.
 
 ## License
 
