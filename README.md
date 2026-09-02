@@ -17,7 +17,7 @@ Base URLs: domestic `https://mkpservice.shippop.com` (prod) / `https://mkpservic
 
 ## Quick start
 
-Requires Node.js ≥ 18. You need a SHIPPOP **marketplace API key** and the email of the account that owns it (see "Getting API access" above). For crossborder tools you additionally need your SHIPPOP account login (email + password).
+Requires Node.js ≥ 22. You need a SHIPPOP **marketplace API key** and the email of the account that owns it (see "Getting API access" above). For crossborder tools you additionally need your SHIPPOP account login (email + password).
 
 Add to your MCP client config (Claude Desktop: `claude_desktop_config.json`):
 

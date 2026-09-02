@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "scripts": {
     "build": "tsup",
@@ -40,10 +40,10 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^20.19.0",
+    "@types/node": "^22.20.1",
     "tsup": "^8.5.1",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.11"
   }
 }
