@@ -17,7 +17,7 @@ async function main() {
   const server = createServer(config);
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error(`shippop-mcp ready — env=${config.env} base=${config.baseUrl} labels=${config.labelDir} crossborder=${config.inter ? config.inter.baseUrl : "off"}`);
+  console.error(`shippop-mcp ready — env=${config.environment} base=${config.baseUrl} labels=${config.labelDir} crossborder=${config.inter ? config.inter.baseUrl : "off"}`);
 }
 
 main().catch((err) => {

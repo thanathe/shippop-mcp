@@ -4,10 +4,15 @@ import fs from "node:fs";
 
 export type ShippopEnv = "dev" | "production";
 
+export type EnvironmentLabel = ShippopEnv | "custom";
+
 export interface ShippopConfig {
   apiKey: string;
   email: string;
+  /** Which SHIPPOP host family the default URLs come from. */
   env: ShippopEnv;
+  /** What tool results report: `dev` / `production` for known SHIPPOP hosts, `custom` for an arbitrary SHIPPOP_BASE_URL. */
+  environment: EnvironmentLabel;
   baseUrl: string;
   labelDir: string;
   /** Default per-request timeout. */
@@ -81,10 +86,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ShippopConfig 
         }
       : undefined;
 
+  const knownHost = baseUrl === BASE_URLS.production || baseUrl === BASE_URLS.dev;
+
   return {
     apiKey,
     email,
     inter,
+    environment: knownHost ? shippopEnv : "custom",
     env: shippopEnv,
     baseUrl,
     labelDir: env.SHIPPOP_LABEL_DIR?.trim() || defaultLabelDir(),

@@ -23,9 +23,12 @@ describe("loadConfig", () => {
     expect(loadConfig({ SHIPPOP_API_KEY: "k", SHIPPOP_EMAIL: "e", SHIPPOP_BASE_URL: "https://mkpservice.shippop.com/" }).env).toBe("production");
     expect(() => loadConfig({ SHIPPOP_API_KEY: "k", SHIPPOP_EMAIL: "e", SHIPPOP_ENV: "dev", SHIPPOP_BASE_URL: "https://mkpservice.shippop.com" })).toThrow(/set SHIPPOP_ENV to match/);
   });
-  it("honours SHIPPOP_BASE_URL override and strips trailing slash", () => {
+  it("honours SHIPPOP_BASE_URL override, strips trailing slash, and labels an unknown host as custom", () => {
     const c = loadConfig({ SHIPPOP_API_KEY: "k", SHIPPOP_EMAIL: "e", SHIPPOP_BASE_URL: "http://localhost:9999/" });
     expect(c.baseUrl).toBe("http://localhost:9999");
+    expect(c.environment).toBe("custom");
+    expect(loadConfig({ SHIPPOP_API_KEY: "k", SHIPPOP_EMAIL: "e" }).environment).toBe("dev");
+    expect(loadConfig({ SHIPPOP_API_KEY: "k", SHIPPOP_EMAIL: "e", SHIPPOP_ENV: "production" }).environment).toBe("production");
   });
 });
 

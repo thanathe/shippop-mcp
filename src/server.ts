@@ -19,7 +19,9 @@ export function createServer(config: ShippopConfig, fetchImpl?: FetchLike): McpS
     { name: SERVER_NAME, version: SERVER_VERSION },
     {
       instructions:
-        `SHIPPOP domestic shipping (Thailand). Environment: ${config.env.toUpperCase()}${config.env === "dev" ? " (sandbox — no real money)" : " (REAL money)"}. ` +
+        `SHIPPOP domestic shipping (Thailand). Environment: ${config.environment.toUpperCase()}${
+          config.environment === "dev" ? " (sandbox — no real money)" : config.environment === "production" ? " (REAL money)" : ` (custom host ${config.baseUrl} — treat as real money)`
+        }. ` +
         "Flow: shippop_check_price → shippop_create_booking (unpaid draft, returns SP tracking codes — keep them) → get the user's explicit OK → shippop_confirm_purchase (pays + dispatches) → shippop_get_label → shippop_request_pickup (or drop off) → shippop_track_shipment. " +
         "Two kinds of tracking code: SHIPPOP code (SPxxxx, from booking; used for tracking/labels) and courier tracking code (assigned after confirm, may arrive late; used for cancel/pickup). " +
         "Weights are in grams. Never confirm without the user agreeing to the price, and never re-confirm a purchase without checking shippop_get_purchase first." +
@@ -37,7 +39,7 @@ export function createServer(config: ShippopConfig, fetchImpl?: FetchLike): McpS
   registerPickupTools(server, client);
   if (config.inter) {
     const inter = new InterClient({ ...config.inter, timeoutMs: config.timeoutMs }, fetchImpl);
-    registerInterTools(server, inter, config.env, config.inter.username);
+    registerInterTools(server, inter, config.environment, config.inter.username);
   }
   return server;
 }

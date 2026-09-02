@@ -42,13 +42,13 @@ describe("shippop_track_shipment", () => {
 });
 
 describe("shippop_get_label", () => {
-  it("writes a PDF to output_dir and returns the path", async () => {
+  it("writes a PDF under the label dir (sub-directory allowed) and returns the path", async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), "shippop-label-"));
-    const t = await connect({ "/label/": { status: true, pdf: Buffer.from("%PDF-1.4 fake").toString("base64") } });
-    const { json, isError } = await t.call("shippop_get_label", { purchase_id: 24744979, output_dir: dir });
+    const t = await connect({ "/label/": { status: true, pdf: Buffer.from("%PDF-1.4 fake").toString("base64") } }, { labelDir: dir });
+    const { json, isError } = await t.call("shippop_get_label", { purchase_id: 24744979, output_dir: "2026-09" });
     expect(isError).toBe(false);
     expect(t.calls[0].body).toMatchObject({ purchase_id: "24744979", type: "pdf", size: "sticker4x6", showproduct: 0 });
-    expect(json.file.startsWith(dir)).toBe(true);
+    expect(json.file.startsWith(path.join(dir, "2026-09"))).toBe(true);
     expect(json.file).toMatch(/\.pdf$/);
     expect((await fs.readFile(json.file, "utf8")).startsWith("%PDF")).toBe(true);
     await t.close();
@@ -60,6 +60,18 @@ describe("shippop_get_label", () => {
     expect(t.calls[0].endpoint).toBe("/label_tracking_code/");
     expect(t.calls[0].body.tracking_code).toBe("SP1,SP2");
     expect(json.label.labels[0].trackingCode).toBe("SP1");
+    await t.close();
+  });
+
+  it("refuses an output_dir outside the label directory", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "shippop-label-"));
+    const t = await connect({}, { labelDir: dir });
+    for (const bad of ["../escape", "/etc", path.join(os.homedir(), ".ssh")]) {
+      const { isError, json } = await t.call("shippop_get_label", { purchase_id: 1, output_dir: bad });
+      expect(isError).toBe(true);
+      expect(json.message).toMatch(/must be inside the label directory/);
+    }
+    expect(t.calls).toHaveLength(0);
     await t.close();
   });
 

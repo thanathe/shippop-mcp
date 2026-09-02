@@ -51,14 +51,14 @@ claude mcp add shippop -e SHIPPOP_API_KEY=your-api-key -e SHIPPOP_EMAIL=you@exam
 | `SHIPPOP_EMAIL` | yes | — | Email of the SHIPPOP account (sent with bookings) |
 | `SHIPPOP_ENV` | no | **`dev`** | `dev` → `mkpservice.shippop.dev` (sandbox), `production` → `mkpservice.shippop.com` (**real money**) |
 | `SHIPPOP_BASE_URL` | no | per env | Override the base URL. If it is one of the known SHIPPOP hosts, `SHIPPOP_ENV` is inferred from it (and a contradicting `SHIPPOP_ENV` is rejected) |
-| `SHIPPOP_LABEL_DIR` | no | `~/Downloads/shippop-labels` | Where `shippop_get_label` writes PDF/HTML files |
+| `SHIPPOP_LABEL_DIR` | no | `~/Downloads/shippop-labels` | Where `shippop_get_label` writes PDF/HTML files. The tool may choose a sub-directory but can never write outside this root |
 | `SHIPPOP_INTER_USERNAME` | no | — | SHIPPOP account **login email** — enables the crossborder `shippop_inter_*` tools |
 | `SHIPPOP_INTER_PASSWORD` | no | — | SHIPPOP account **login password** (set together with the username) |
 | `SHIPPOP_INTER_BASE_URL` | no | per env | `inter.shippop.dev` / `inter.shippop.com` |
 | `SHIPPOP_TIMEOUT_MS` | no | `20000` | Per-request timeout |
 | `SHIPPOP_CONFIRM_TIMEOUT_MS` | no | `60000` | Timeout for the (slow) confirm call |
 
-The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=production` when you are ready to ship for real. Every tool result includes the `environment` it ran against.
+The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=production` when you are ready to ship for real. Every tool result includes the `environment` it ran against (`dev`, `production`, or `custom` for an unknown `SHIPPOP_BASE_URL`).
 
 > **Dev and production keys are different.** A production API key is rejected by the dev host with `Invalid API key` (verified live). If SHIPPOP only gave you a production key, set `SHIPPOP_ENV=production` — and remember that `shippop_confirm_purchase` then spends real money.
 

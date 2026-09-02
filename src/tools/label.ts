@@ -18,6 +18,17 @@ interface LabelResponse {
 
 const TRACKING_CODE_LABEL_SIZES = new Set(["A4", "A5", "A6", "letter", "letter4x6", "sticker", "sticker4x6"]);
 
+/** Labels are always written under the configured label directory; the model may pick a sub-directory but not escape it. */
+export function resolveOutputDir(labelDir: string, requested: string | undefined): string {
+  const root = path.resolve(labelDir);
+  if (!requested) return root;
+  const target = path.resolve(root, requested);
+  if (target !== root && !target.startsWith(root + path.sep)) {
+    throw new Error(`output_dir must be inside the label directory ${root} (got ${requested}). Set SHIPPOP_LABEL_DIR to change the root.`);
+  }
+  return target;
+}
+
 function safeName(s: string) {
   return s.replace(/[^A-Za-z0-9_-]+/g, "_").slice(0, 80);
 }
@@ -36,7 +47,10 @@ export function registerLabelTools(server: McpServer, client: ShippopClient, con
         tracking_codes: z.array(z.string()).min(1).max(100).optional().describe("SHIPPOP tracking codes (SPxxxx)"),
         format: z.enum(["pdf", "html", "json"]).default("pdf"),
         size: LabelSizeSchema.default("sticker4x6").describe("Paper/sticker size. sticker4x6 is the common thermal label."),
-        output_dir: z.string().optional().describe("Directory to write pdf/html into (default: SHIPPOP_LABEL_DIR or ~/Downloads/shippop-labels)"),
+        output_dir: z
+          .string()
+          .optional()
+          .describe("Sub-directory (relative) inside the label directory (SHIPPOP_LABEL_DIR or ~/Downloads/shippop-labels) to write into, e.g. \"2026-09\". Absolute paths are only accepted if they are inside that directory."),
         show_products: z.boolean().default(false).describe("Print product lines on the label (sticker4x6 only)"),
         hide_receiver_info: z.boolean().default(false),
         separate_pages: z.boolean().default(false).describe("One label per page"),
@@ -65,6 +79,8 @@ export function registerLabelTools(server: McpServer, client: ShippopClient, con
       if ((args.order_date || args.print_date) && !args.replace_origin && !args.tracking_codes?.length) {
         throw new Error("order_date / print_date are applied per SP tracking code — pass tracking_codes (optionally together with purchase_id)");
       }
+      // Validate the destination before spending a SHIPPOP call.
+      const dir = args.format === "json" ? undefined : resolveOutputDir(config.labelDir, args.output_dir);
       const body: Record<string, unknown> = {
         type: args.format,
         size: args.size,
@@ -119,10 +135,9 @@ export function registerLabelTools(server: McpServer, client: ShippopClient, con
         return ok({ environment: client.env, label: res.json });
       }
 
-      const dir = args.output_dir ?? config.labelDir;
-      await fs.mkdir(dir, { recursive: true });
+      await fs.mkdir(dir!, { recursive: true });
       const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      const file = path.join(dir, `shippop-label-${safeName(stem)}-${args.size}-${stamp}.${args.format}`);
+      const file = path.join(dir!, `shippop-label-${safeName(stem)}-${args.size}-${stamp}.${args.format}`);
       const content = args.format === "pdf" ? Buffer.from(res.pdf ?? "", "base64") : Buffer.from(res.html ?? "", "utf8");
       if (content.length === 0) throw new Error(`SHIPPOP returned an empty ${args.format} label`);
       await fs.writeFile(file, content);

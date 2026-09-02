@@ -76,8 +76,9 @@ export class ShippopClient {
     private readonly fetchImpl: FetchLike = globalThis.fetch,
   ) {}
 
+  /** Environment label reported in every tool result (`dev` / `production` / `custom`). */
   get env() {
-    return this.config.env;
+    return this.config.environment;
   }
   get email() {
     return this.config.email;
