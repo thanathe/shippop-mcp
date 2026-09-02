@@ -6,7 +6,7 @@ import { InterShipmentSchema, INTER_COURIER_REFS } from "./schemas.js";
 import { ShippopNetworkError, ShippopTimeoutError } from "../client.js";
 import { ok, fail } from "../result.js";
 
-function interGuard<A>(env: string, fn: (args: A) => Promise<CallToolResult>): (args: A) => Promise<CallToolResult> {
+export function interGuard<A>(env: string, fn: (args: A) => Promise<CallToolResult>): (args: A) => Promise<CallToolResult> {
   return async (args) => {
     try {
       return await fn(args);

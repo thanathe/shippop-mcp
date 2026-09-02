@@ -115,6 +115,7 @@ The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=produ
 
 | Tool | What it does | Side effects |
 |---|---|---|
+| `shippop_inter_prepare_shipment` | **Contents in Thai/English → accepted customs declaration** (generic category + HS code), air-freight restriction flags, weight estimation, volumetric weight, courier fit + checklist from each courier's terms, address normalisation (≤50-char lines, phone with country code). Returns a ready `shipment` + `warnings` | none |
 | `shippop_inter_list_countries` | Destination countries and ISO codes | none |
 | `shippop_inter_check_price` | Quote by weight (g) + destination country; returns `courier_ref` | none |
 | `shippop_inter_get_coverages` | Optional insurance for a courier | none |
@@ -127,7 +128,9 @@ The default environment is the **sandbox** on purpose — set `SHIPPOP_ENV=produ
 | `shippop_inter_track_shipment` | Tracking events | none |
 | `shippop_inter_delete_shipments` | Delete unpaid drafts | deletes drafts |
 
-Flow: `inter_check_price → inter_create_shipments → inter_calculate_order → user OK → inter_create_order → pay at payment_url → inter_get_labels`.
+Flow: `inter_prepare_shipment → inter_create_shipments → inter_calculate_order → user OK → inter_create_order → pay at payment_url → inter_get_labels`.
+
+**Why `prepare_shipment` exists.** The hard part of shipping abroad from Thailand is not the API — it is the customs declaration. Counter staff refuse "eyeliner ×3" as "liquid, cannot fly" and accept the same parcel declared as "Cosmetics"; SHIPPOP's own drafts use generic categories plus 6-digit HS codes ("Clothes 620520", "Supplementary food 210690"). The tool carries that playbook (`src/inter/playbook.ts`, ~60 categories with Thai/English keywords) and applies **air-freight rules to every shipment** (all SHIPPOP Inter services fly, even to LA/MM/KH). It **flags** genuinely dangerous goods (alcohol perfume, aerosols, lithium batteries) and never re-words them into something that would slip through — that is a safety and account-ban issue. PRs adding real accepted/rejected cases to the playbook are welcome.
 
 Verified against the live production API (2026-09-02): login, countries, price, create/calculate/delete shipments. Notes from that run: the sender address needs an `email` (undocumented — defaults to the account email); draft shipments have no tracking until paid; an account with an unpaid Inter invoice gets `order.unpaidInvoice` from create_order.
 

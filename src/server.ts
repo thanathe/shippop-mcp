@@ -9,6 +9,7 @@ import { registerCancelTools } from "./tools/cancel.js";
 import { registerPickupTools } from "./tools/pickup.js";
 import { InterClient } from "./inter/client.js";
 import { registerInterTools } from "./inter/tools.js";
+import { registerPrepareTool } from "./inter/prepare-tool.js";
 
 export const SERVER_NAME = "shippop-mcp";
 export const SERVER_VERSION = "1.0.0";
@@ -26,7 +27,7 @@ export function createServer(config: ShippopConfig, fetchImpl?: FetchLike): McpS
         "Two kinds of tracking code: SHIPPOP code (SPxxxx, from booking; used for tracking/labels) and courier tracking code (assigned after confirm, may arrive late; used for cancel/pickup). " +
         "Weights are in grams. Never confirm without the user agreeing to the price, and never re-confirm a purchase without checking shippop_get_purchase first." +
         (config.inter
-          ? " Crossborder (international) shipping uses the separate shippop_inter_* tools: inter_check_price → inter_create_shipments (INTxxxx drafts) → inter_calculate_order → user OK → inter_create_order (returns payment_url to pay) → inter_get_labels → inter_track_shipment."
+          ? " Crossborder (international) shipping uses the separate shippop_inter_* tools: inter_prepare_shipment (turn contents into an accepted customs declaration + checks) → inter_create_shipments (INTxxxx drafts) → inter_calculate_order → user OK → inter_create_order (returns payment_url to pay) → inter_get_labels → inter_track_shipment. All Inter services fly — apply air rules."
           : " Crossborder tools are not enabled (no SHIPPOP_INTER_USERNAME/PASSWORD)."),
     },
   );
@@ -40,6 +41,7 @@ export function createServer(config: ShippopConfig, fetchImpl?: FetchLike): McpS
   if (config.inter) {
     const inter = new InterClient({ ...config.inter, timeoutMs: config.timeoutMs }, fetchImpl);
     registerInterTools(server, inter, config.environment, config.inter.username);
+    registerPrepareTool(server, inter, config.environment, config.inter.username);
   }
   return server;
 }

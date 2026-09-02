@@ -103,6 +103,30 @@ An international carrier service identified by its **Courier Ref** (`CRARMPPX`, 
 Optional insurance offered by an **Inter Courier**, identified by a coverage ref (`CVARMSTD`).
 _Avoid_: insurance (domestic uses `insurance_code`), protection
 
+**Declaration**:
+The customs description of an **Inter Shipment**'s contents: its **Goods** lines as customs and the courier counter will read them. Acceptance at the counter depends on the wording as much as on the contents.
+_Avoid_: manifest, invoice (the commercial invoice is generated from it), description
+
+**Declaration Category**:
+The generic English product wording plus 6-digit HS code used for a **Goods** line (`Cosmetics (eye make-up)` 330420, `Clothes` 620520). Chosen from the **Playbook**; never a brand name or an over-specific word.
+_Avoid_: product name, item, SKU
+
+**Playbook**:
+The curated table mapping everyday Thai/English item words to a **Declaration Category** and its **Restriction Flags**, seeded from SHIPPOP's own drafts and real counter outcomes. It grows from real accepted/rejected cases.
+_Avoid_: mapping, Excel, dictionary
+
+**Restriction Flag**:
+A property of a **Declaration Category** that makes an item risky or forbidden for air freight (flammable, aerosol, lithium battery, liquid, plant/animal, medicine, food, valuable, prohibited), each with a severity (`block` / `warn` / `info`) and what to do instead. Flags are surfaced, never hidden by re-wording.
+_Avoid_: DG (jargon), prohibited list
+
+**Chargeable Weight**:
+The weight a **Courier** bills for: the greater of actual gross weight and **Volumetric Weight** (W×L×H cm ÷ 5000, in kg) for express couriers; Thai Post services bill actual weight.
+_Avoid_: billable weight, dimensional weight (that is Volumetric Weight)
+
+**Duty Payer**:
+Who pays import duty and tax at destination: `receiver` (SHIPPOP default, DDU) or `sender` (DDP). SHIPPOP field `taxpayer`.
+_Avoid_: incoterm, DDP/DDU (use as explanation only)
+
 ## Flagged ambiguities
 
 - **"Order"** — SHIPPOP's docs use "order" for Booking, Purchase and Shipment interchangeably (`booking order`, `confirm order`, `order_status`, `tracking order`). We never use "order"; we say **Purchase** for the group and **Shipment** for the individual parcel.
