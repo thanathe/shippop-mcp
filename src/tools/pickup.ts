@@ -25,6 +25,16 @@ interface PickupListResponse {
   };
 }
 
+/** "YYYY-MM-DD HH:mm:ss" in Asia/Bangkok, the format SHIPPOP's created_at filter expects. */
+function formatBangkok(d: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+}
+
 export function registerPickupTools(server: McpServer, client: ShippopClient) {
   server.registerTool(
     "shippop_request_pickup",
@@ -83,7 +93,9 @@ export function registerPickupTools(server: McpServer, client: ShippopClient) {
     "shippop_list_pickups",
     {
       title: "List pickup requests",
-      description: "List pickup requests made for this account, with courier staff details and state. Filter by date range, courier, origin or pickup ids.",
+      description:
+        "List pickup requests made for this account, with courier staff details and state. Filter by date range, courier, origin or pickup ids. " +
+        "SHIPPOP returns oldest-first with no sort option, so when no filter is given this defaults to the last 30 days; pass created_from/created_to for other ranges.",
       inputSchema: {
         page: z.number().int().positive().default(1),
         perpage: z.number().int().positive().max(100).default(25),
@@ -98,14 +110,24 @@ export function registerPickupTools(server: McpServer, client: ShippopClient) {
     },
     guard(client.env, async ({ page, perpage, created_from, created_to, courier_codes, origin_ids, courier_pickup_ids, courier_ticket_pickup_ids }) => {
       const body: Record<string, unknown> = { page, perpage };
-      if (created_from || created_to) body.created_at = { start: created_from, end: created_to };
+      const hasFilter = created_from || created_to || courier_codes?.length || origin_ids?.length || courier_pickup_ids?.length || courier_ticket_pickup_ids?.length;
+      let window: { start?: string; end?: string } | undefined;
+      if (created_from || created_to) window = { start: created_from, end: created_to };
+      else if (!hasFilter) {
+        // Verified live: an unfiltered call walks the whole history oldest-first (1,800+ rows, ~14 s) — not useful to an agent.
+        const end = new Date();
+        const start = new Date(end.getTime() - 30 * 24 * 3600 * 1000);
+        window = { start: formatBangkok(start), end: formatBangkok(end) };
+      }
+      if (window) body.created_at = window;
       if (courier_codes?.length) body.courier_codes = courier_codes;
       if (origin_ids?.length) body.origin_ids = origin_ids;
       if (courier_pickup_ids?.length) body.courier_pickup_ids = courier_pickup_ids;
       if (courier_ticket_pickup_ids?.length) body.courier_ticket_pickup_ids = courier_ticket_pickup_ids;
-      const res = await client.post<PickupListResponse>("/pickup/", body);
+      const res = await client.post<PickupListResponse>("/pickup/", body, { timeoutMs: 45_000 });
       return ok({
         environment: client.env,
+        created_at_filter: window,
         page: res.data?.page ?? page,
         pages: res.data?.pages,
         total: res.data?.total !== undefined ? Number(res.data.total) : undefined,

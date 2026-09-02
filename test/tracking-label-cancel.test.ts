@@ -122,6 +122,16 @@ describe("shippop_request_pickup / list_pickups", () => {
     expect(json.courier_pickup_id).toBe(9);
     await t.close();
   });
+  it("defaults to a 30-day window when unfiltered", async () => {
+    const t = await connect({ "/pickup/": { status: true, data: { items: [], pages: 0, page: 1, perpage: 25, total: "0" } } });
+    const { json } = await t.call("shippop_list_pickups", {});
+    const { start, end } = t.calls[0].body.created_at;
+    expect(start).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    expect(new Date(end.replace(" ", "T") + "+07:00").getTime() - new Date(start.replace(" ", "T") + "+07:00").getTime()).toBe(30 * 24 * 3600 * 1000);
+    expect(json.created_at_filter).toEqual({ start, end });
+    await t.close();
+  });
+
   it("lists pickups with filters", async () => {
     const t = await connect({ "/pickup/": { status: true, data: { items: [{ id: 1 }], pages: 1, page: 1, perpage: 25, total: "1" } } });
     const { json } = await t.call("shippop_list_pickups", { created_from: "2026-09-01 00:00:00", created_to: "2026-09-01 23:59:59", courier_codes: ["FLE"] });

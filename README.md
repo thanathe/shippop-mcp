@@ -120,7 +120,7 @@ Weights are in **grams**; sizes in cm.
 
 **Verification status (live production API, 2026-09-02):**
 
-- Domestic — verified: `list_couriers`, `check_price`, `create_booking` (unpaid), `get_purchase` (form-urlencoded `/tracking_purchase/` works), `track_shipment`. `get_label` correctly refuses an unpaid purchase ("Purchase unconfirmed"). **Not exercised: `confirm_purchase`, `cancel_shipment`, `request_pickup`, `list_pickups`** — they cost money or need a paid shipment; the confirm request format matches the verified `tracking_purchase` one.
+- Domestic — verified: `list_couriers`, `check_price`, `create_booking` (unpaid), `get_purchase` (form-urlencoded `/tracking_purchase/` works), `track_shipment`, `list_pickups` (1,800+ historical rows came back oldest-first in ~14 s, hence the default 30-day window). `get_label` correctly refuses an unpaid purchase ("Purchase unconfirmed"). **Not exercised: `confirm_purchase`, `cancel_shipment`, `request_pickup`** — they cost money or need a paid shipment; the confirm request format matches the verified `tracking_purchase` one.
 - Crossborder — verified: login, countries, price, coverages, create/calculate/delete shipments. `create_order` blocked on the test account by `order.unpaidInvoice`; `get_labels`/tracking need a paid order.
 
 Glossary of terms used in the code and tool descriptions: [CONTEXT.md](CONTEXT.md). [docs/shippop-api.md](docs/shippop-api.md) is an auto-scraped snapshot of the Postman collection kept for offline grep — the [official docs](#official-shippop-api-documentation) are authoritative.
@@ -145,6 +145,7 @@ SHIPPOP_API_KEY=… SHIPPOP_EMAIL=… npm run dev
 cp .env.example .env   # fill in
 npx tsx scripts/live-smoke.ts --book --inter
 npx tsx scripts/live-readback.ts <purchase_id> <SPxxxx>   # read-only: get_purchase, track, label(json) of an existing purchase
+npx tsx scripts/live-call.ts shippop_list_pickups '{}'     # call any single tool (refuses confirm_purchase)
 ```
 
 Not published to npm yet — until then, clone this repo, `npm install && npm run build`, and point your MCP config at `node /path/to/shippop-mcp/dist/index.js` instead of `npx -y shippop-mcp`.
